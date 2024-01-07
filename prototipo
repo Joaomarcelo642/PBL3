@@ -1,0 +1,62 @@
+#Inicio
+class Sessao:
+    def __init__(self, data, horario_inicio, data, horario_inicio):
+        self.data = data
+        self.horario_inicio = horario_inicio
+        self.horario_fim = horario_fim
+
+
+class Paciente:
+    def __init__(self, id, nome, idade, prontuario):
+        self.id = id
+        self.nome = nome
+        self.idade = idade
+        self.prontuario = prontuario
+
+
+class Recepcao:
+    def __init__(self):
+        self.sessoes = []
+        self.pacientes = []
+
+    def criarSessao(self, data, horario_inicio, horario_fim):
+        nova_sessao = Sessao(data, horario_inicio, horario_fim)
+        self.sessoes.append(nova_sessao)
+    
+    def listarSessoes(self):
+        for sessao in self.sessoes:
+            print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
+    
+    def buscarSessao(self, data):
+        for sessao in self.sessoes:
+            if sessao.data == data:
+                print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
+                return sessao
+            else:
+                print('Não há sessão marcada nessa data')
+    
+    def adicionarPaciente(self, id, nome, idade, prontuario):
+        novo_paciente = Paciente(id, nome, idade, prontuario)
+        self.pacientes.append(novo_paciente)
+
+    def marcarConsulta(self, id_paciente, sessao_data):
+        for paciente in self.pacientes:
+            if paciente.id == id_paciente:
+                sessao = self.buscarSessao(sessao_data)
+                if sessao:
+                    print(f'Marcado horário para {paciente.nome} na sessão {sessao.data}.')
+                else:
+                    print('Não há sessão nesta data.')
+            else:
+                print('Paciente não encontrado.')
+
+    def listarConsultas(self, id_paciente):
+        for paciente in self.pacientes:
+            if paciente.id == id_paciente:
+                print(f"Horários marcados para {paciente.nome}:")
+
+class Dentista:
+    def __init__(self, data, horario_inicio, data,):
+        pass
+
+
