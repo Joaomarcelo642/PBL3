@@ -1,62 +1,246 @@
 #Inicio
+
+#Classe Sessao a seguir, que contêm as informações das sessões, além de listas que guardam as filas das sessões e as anotações das consultas
 class Sessao:
     def __init__(self, data, horario_inicio, data, horario_inicio):
         self.data = data
         self.horario_inicio = horario_inicio
         self.horario_fim = horario_fim
+        self.fila_sessao - []
+        self.sessao_dentista = None
+        self.anotacoes = []
 
-
+#Classe Paciente que contém o gerador de ID e os dados dos pacientes
 class Paciente:
+    contador_id = 1
+
     def __init__(self, id, nome, idade, prontuario):
-        self.id = id
+        self.id = Paciente.contador_id
+        Paciente.contador_id += 1
         self.nome = nome
         self.idade = idade
         self.prontuario = prontuario
 
+#Classe consulta que contém as informações das consultas
+class Consulta:
+    def __init__(self, paciente, sessao):
+        self.paciente = paciente
+        self.sessao = sessao
 
+#Classe Dentista que contém os dados da sessão do dentista
+class Dentista:
+    def __init__(self, data, horario_inicio):
+        self.data = data
+        self.horario_inicio = horario_inicio
+        self.consultas = []
+
+#Classe Recepcao que contém a maior parte do código
 class Recepcao:
     def __init__(self):
         self.sessoes = []
+        self.sessao_atual = None
         self.pacientes = []
+        self.paciente_atual = None
+        
+
+    def buscarPaciente(self, id_paciente):
+        for paciente in self.pacientes:
+            if paciente.id == id_paciente:
+                return paciente
+        print('Paciente não esta cadastrado.')
+        return None
 
     def criarSessao(self, data, horario_inicio, horario_fim):
         nova_sessao = Sessao(data, horario_inicio, horario_fim)
         self.sessoes.append(nova_sessao)
+        print(f'Sessão {nova_sessao.data}, das {nova_sessao.horario_inicio} às {nova_sessao.horario_fim} criada')
     
     def listarSessoes(self):
         for sessao in self.sessoes:
-            print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
+            print(f'Sessão {sessao.data} das {sessao.horario_inicio} às {sessao.horario_fim}')
     
     def buscarSessao(self, data):
         for sessao in self.sessoes:
             if sessao.data == data:
-                print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
+                print(f'Sessão {sessao.data} das {sessao.horario_inicio} às {sessao.horario_fim}')
                 return sessao
-            else:
-                print('Não há sessão marcada nessa data')
+        print('Não há sessão marcada nessa data')
+        return None
+
+    def iniciarSessao(self, data):
+        validacao_sessao = self.buscarSessao(data)
+        if validacao_sessao:
+            self.sessao_atual = validacao_sessao
+            self.sessao_atual.fila_sessao = []
+            print(f'Sessão {sessao.data} das {sessao.horario_inicio} às {sessao.horario_fim} iniciada.')
+        else:
+            print('Sessão não existe')
+
     
-    def adicionarPaciente(self, id, nome, idade, prontuario):
-        novo_paciente = Paciente(id, nome, idade, prontuario)
+    def adicionarPaciente(self, nome, idade, prontuario):
+        novo_paciente = Paciente(nome, idade, prontuario)
         self.pacientes.append(novo_paciente)
+        print(f'Paciente {novo_paciente.nome} cadastrado')
 
     def marcarConsulta(self, id_paciente, sessao_data):
-        for paciente in self.pacientes:
-            if paciente.id == id_paciente:
-                sessao = self.buscarSessao(sessao_data)
-                if sessao:
-                    print(f'Marcado horário para {paciente.nome} na sessão {sessao.data}.')
-                else:
-                    print('Não há sessão nesta data.')
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente:
+            sessao = self.buscarSessao(sessao_data)
+            if sessao:
+                consulta = Consulta(paciente, sessao)
+                sessao.fila_sessao.append(consulta)
+                print(f'Marcado horário para {paciente.nome} na sessão {sessao.data}.')
             else:
-                print('Paciente não encontrado.')
+                print('Não há sessão nesta data.')
+        else:
+            print('Paciente não encontrado.')
 
     def listarConsultas(self, id_paciente):
-        for paciente in self.pacientes:
-            if paciente.id == id_paciente:
-                print(f"Horários marcados para {paciente.nome}:")
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente:
+            print(f"Horários marcados para {paciente.nome}:")
+            for sessao in self.sessoes:
+                for consulta in sessao.consultas: #ainda criar lista consultas
+                    if consulta.paciente == paciente:
+                        print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
 
-class Dentista:
-    def __init__(self, data, horario_inicio, data,):
-        pass
+    def confirmarConsulta(self, id_paciente, sessao_data):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente and self.sessao_atual:
+            for consulta in self.sessao_atual.fila_sessao:
+                if consulta.paciente == paciente:
+                    self.sessao_atual.fila_sessao.append(paciente)
+                    print(f'{paciente.nome} tem consulta marcada para a sessão atual e está adicionado à fila')
+                    return True
+            print(f'{paciente.nome} não tem consulta marcada para a sessão atual')
+            return False
+
+    def listarProximoDaFila(self):
+        if self.sessao_atual and self.sessao_atual.fila_sessao:
+            proximo_paciente = self.sessao_atual.fila_sessao[0]
+            print(f'O proxímo paciente da fila é {proximo_paciente.nome}')
+        else:
+            print('Fila vazia ou sessão não iniciada.')
+    
+    def iniciarSessaoDentista(self):
+        if self.sessao_atual:
+            sessao_dentista = Dentista(self.sessao_atual.data, self.sessao_atual.horario_inicio)
+            self.sessao_atual.sessao_dentista = sessao_dentista
+            print(f'Sessão do dentista iniciada na {self.sessao_atual.data} às {self.sessao_atual.horario_inicio}.')
+    
+    def atenderPaciente(self):
+        if self.sessao_atual and self.sessao_atual.sessao_dentista:
+            if self.sessao_atual.fila_sessao:
+                proximo_paciente = self.sessao_atual.fila_sessao.pop(0)
+                consulta = Consulta(proximo_paciente, self.sessao_atual)
+                self.sessao_atual.sessao_dentista.consultas.append(consulta)
+                print(f'Próximo paciente: {proximo_paciente.nome}')
+            else:
+                print('Fila da sessão vazia.')
+        else:
+            print('Sessão do dentista não iniciada ou fila da sessão indisponível.')
+
+    def prontuarioCompletoPacienteAtual(self, id_paciente):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente and self.sessao_atual:
+            print(f'Prontuário completo de {paciente.nome} na sessão {self.sessao_atual.data}')
+            for consulta in self.sessao_atual.sessao_dentista.consultas:
+                if consulta.paciente == paciente:
+                    print(f'''Consulta em {consulta.sessao.data}
+                    Anotações:''')
+                    for anotacao in consulta.sessao.anotacoes:
+                        print(anotacao)
+                    return
+            print('Paciente não atendido nesta sessão.')
+
+    def primeraAnotacaoPacienteAtual(self, id_paciente):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente:
+            for sessao in self.sessoes:
+                for consulta in sessao.sessao_dentista.consultas:
+                    if consulta.paciente == paciente:
+                        if consutlta.sessao.anotacoes:
+                            print(f'''Primeira anotação do {paciente.nome} na sessão {sessao.data}:
+                            {consulta.sessao.anotacoes[0]}''')
+                            return
+                        else:
+                            print('Não há anotação prévia deste paciente')
+                            return
+            print('Paciente não atendido')
+        else:
+            print('Paciente não encontrado')
+
+    def ultimaAnotacaoPacienteAtual(self, id_paciente):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente and self.sessao_atual:
+            consulta_anterior = None
+            for sessao in self.sessoes:
+                for consulta in sessao.sessao_dentista.consultas:
+                    if consulta.paciente == paciente:
+                        consulta_anterior = sessao
+                        break
+                if consulta_anterior:
+                    break
+            if consulta_anterior:
+                print(f'Última anotação de {paciente.nome} na sessão {consulta_anterior.data}')
+                if consulta_anterior.anotacoes:
+                    print(consulta_anterior.anotacoes[-1])
+                else:
+                    print("Não houve anotação na última consulta deste paciente")
+            else:
+                print('Não houve consulta anterior deste paciente')
+        else:
+            print('Paciente não encontrado para sessão atual')
+
+    def adicionarAnotacaoPacienteAtual(self, id_paciente, anotacao):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente and self.sessao_atual and self.sessao_atual.sessao_dentista:
+            for consulta in self.sessao_atual.sessao_dentista.consultas:
+                if consulta.paciente == paciente:
+                    consulta.sessao.anotacoes.append(anotacao)
+                    print(f'Anotação de {paciente.nome} adicionado na sessão {self.sessao_atual.data}')
+                    return
+            print('Paciente não atendido na atual sessão')
+        else:
+            print('Paciente não encontrado na sessão atual')
+    
+    def listarConsultasFeitasDaSessao(self):
+        if self.sessao_atual and self.sessao_atual.sessao_dentista:
+            print(f'Consultas realizadas na sessão {self.sessao_atual.data}:')
+            for consulta in self.sessao_atual.sessao_dentista.consultas:
+                print(consulta.paciente.nome)
+        else:
+            print('Sessão não iniciada')
+    
 
 
+
+
+escolha_menu = input('''SELECIONE O MENU:
+1 - Recepção
+2 - Dentista
+''')
+
+if escolha_menu == '1':
+    menu_recepcao = input('''1 - Criar nova sessão
+    2 - Listar sessões
+    3 - Buscar sessão
+    4 - Adicionar novo paciente
+    5 - Marcar consulta para paciente
+    6 - Listar consultas marcadas para um paciente
+    7 - iniciar sessão
+    8 - Confirmar se paciente está marcado para sessão atual
+    9 - Colocar paciente na fila de atendimento
+    10 - Listar próximo paciente da fila de atendimento
+    11 - Listar próximo paciente da fila de atendimento
+    12 - Listar consultas realizadas numa sessão
+    ''')
+
+elif escolha_menu == '2':
+    menu_dentista = input('''1 - Iniciar sessão
+    2 - Atender próximo paciente 
+    3 - Ler prontuário do paciente atual
+    4 - Ler primeira anotação do paciente atual
+    5 - Ler anotação mais recente do paciente atual
+    6 - Anotar prontuário do paciente atual
+    ''')
