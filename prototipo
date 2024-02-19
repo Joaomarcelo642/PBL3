@@ -1,8 +1,20 @@
+"""*******************************************************************************
+Sistema operacional: Windows 10
+Versão Python: 3.11.5 (64-bit)
+Autor: João Marcelo Nascimento Fernandes
+Componente Curricular: Algoritmos I
+Concluido em: 19/02/2024
+Declaro que este código foi elaborado por mim de forma individual e não contém nenhum
+trecho de código de outro colega ou de outro autor, tais como provindos de livros e
+apostilas, e páginas ou documentos eletrônicos da Internet. Qualquer trecho de código
+de outra autoria que não a minha está destacado com uma citação para o autor e a fonte
+do código, e estou ciente que estes trechos não serão considerados para fins de avaliação.
+******************************************************************************************"""
 #Inicio
 
-#Classe Sessao a seguir, que contêm as informações das sessões, além de listas que guardam as filas das sessões e as anotações das consultas
+#Classe Sessao que contêm as informações das sessões e as listas que guardam as filas das sessões e as anotações das consultas
 class Sessao:
-    def __init__(self, data, horario_inicio, data, horario_inicio):
+    def __init__(self, data, horario_inicio, horario_fim):
         self.data = data
         self.horario_inicio = horario_inicio
         self.horario_fim = horario_fim
@@ -14,12 +26,11 @@ class Sessao:
 class Paciente:
     contador_id = 1
 
-    def __init__(self, id, nome, idade, prontuario):
+    def __init__(self, nome, idade):
         self.id = Paciente.contador_id
         Paciente.contador_id += 1
         self.nome = nome
         self.idade = idade
-        self.prontuario = prontuario
 
 #Classe consulta que contém as informações das consultas
 class Consulta:
@@ -41,6 +52,7 @@ class Recepcao:
         self.sessao_atual = None
         self.pacientes = []
         self.paciente_atual = None
+        self.menu_selecionado = None
         
 
     def buscarPaciente(self, id_paciente):
@@ -77,10 +89,10 @@ class Recepcao:
             print('Sessão não existe')
 
     
-    def adicionarPaciente(self, nome, idade, prontuario):
-        novo_paciente = Paciente(nome, idade, prontuario)
+    def adicionarPaciente(self, nome, idade):
+        novo_paciente = Paciente(nome, idade)
         self.pacientes.append(novo_paciente)
-        print(f'Paciente {novo_paciente.nome} cadastrado')
+        print(f'Paciente {novo_paciente.nome} cadastrado, ID: {novo_paciente.id}')
 
     def marcarConsulta(self, id_paciente, sessao_data):
         paciente = self.buscarPaciente(id_paciente)
@@ -104,7 +116,7 @@ class Recepcao:
                     if consulta.paciente == paciente:
                         print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
 
-    def confirmarConsulta(self, id_paciente, sessao_data):
+    def confirmarConsulta(self, id_paciente):
         paciente = self.buscarPaciente(id_paciente)
         if paciente and self.sessao_atual:
             for consulta in self.sessao_atual.fila_sessao:
@@ -143,7 +155,7 @@ class Recepcao:
     def prontuarioCompletoPacienteAtual(self, id_paciente):
         paciente = self.buscarPaciente(id_paciente)
         if paciente and self.sessao_atual:
-            print(f'Prontuário completo de {paciente.nome} na sessão {self.sessao_atual.data}')
+            print(f'Prontuário completo de {paciente.nome}, idade: {paciente.idade} na sessão {self.sessao_atual.data}')
             for consulta in self.sessao_atual.sessao_dentista.consultas:
                 if consulta.paciente == paciente:
                     print(f'''Consulta em {consulta.sessao.data}
@@ -211,36 +223,126 @@ class Recepcao:
                 print(consulta.paciente.nome)
         else:
             print('Sessão não iniciada')
+
+    def selecaoMenu(self):
+        print('''
+        SELECIONE O MENU:
+        1 - Recepção
+        2 - Dentista
+        0 - Sair
+        ''')
+
+    def menuRecepcao(self):
+        print('''
+        MENU RECEPÇÃO:
+        1 - Criar nova sessão
+        2 - Listar sessões
+        3 - Buscar sessão
+        4 - Adicionar novo paciente
+        5 - Marcar consulta para paciente
+        6 - Listar consultas marcadas para um paciente
+        7 - iniciar sessão
+        8 - Confirmar se paciente está marcado para sessão atual e adiciona-lo na fila
+        9 - Listar próximo paciente da fila de atendimento
+        10 - Listar consultas realizadas numa sessão
+        0 - Voltar
+        ''')
+
+    def menuDentista(self):
+        print('''
+        MENU DENTISTA:
+        1 - Buscar sessão
+        2 - Iniciar sessão
+        3 - Atender próximo paciente 
+        4 - Ler prontuário do paciente atual
+        5 - Ler primeira anotação do paciente atual
+        6 - Ler anotação mais recente do paciente atual
+        7 - Anotar prontuário do paciente atual
+        0 - Voltar
+        ''')
     
+    def run(self):
+        while True:
+            self.selecaoMenu()
+            escolha_menu = input('Selecione uma opção:')
+            
+            if escolha_menu == '0':
+                print('Encerrando sistema')
+            elif escolha_menu == '1':
+                self.menu_selecionado = self.menuRecepcao
+            elif escolha_menu == '2':
+                self.menu_selecionado = self.menuDentista
+            else:
+                print('Opção inválida, tente novamente')
+                continue
+
+            while True:
+                self.menu_selecionado()
+                opcoesmenu = input('Selecione uma opção: ')
+
+                if opcoesmenu == '0':
+                    break
+                elif self.menu_selecionado == self.menuRecepcao:
+                    if opcoesmenu == '1':
+                        data = input('Digite a data da sessão (DD/MM/AAAA): ')
+                        horario_inicio = input('Digite o horário de início da sessão (HH:MM): ')
+                        horario_fim = input('Digite o horário do fim da sessão (HH:MM): ')
+                        self.criarSessao(data, horario_inicio, horario_fim)
+                    elif opcoesmenu == '2':
+                        self.listarSessoes()
+                    elif opcoesmenu == '3':
+                        data = input('Digite a data da sessão (DD/MM/AAAA): ')
+                        self.buscarSessao(data)
+                    elif opcoesmenu == '4':
+                        nome = input('Digite o nome do paciente: ')
+                        idade = input('Digite a idade do paciente: ')
+                        self.adicionarPaciente(nome, idade)
+                    elif opcoesmenu == '5':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        sessao_data = input('Digite a data da sessão (DD/MM/AAAA): ')
+                        self.marcarConsulta(id_paciente, sessao_data)
+                    elif opcoesmenu == '6':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.listarConsultas(id_paciente)
+                    elif opcoesmenu == '7':
+                        data = input('Digite a data da sessão (DD/MM/AAAA): ')
+                        self.iniciarSessao(data)
+                    elif opcoesmenu == '8':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.confirmarConsulta(id_paciente)
+                    elif opcoesmenu == '9':
+                        self.listarProximoDaFila()
+                    elif opcoesmenu == '10':
+                        self.listarConsultasFeitasDaSessao
+                    else:
+                        print('Opção inválida, tente novamente')
+                elif self.menu_selecionado == self.menuDentista:
+                    if opcoesmenu == '1':
+                        data = input('Digite a data da sessão (DD/MM/AAAA): ')
+                        self.buscarSessao(data)
+                    elif opcoesmenu == '2':
+                        self.iniciarSessaoDentista()
+                    elif opcoesmenu == '3':
+                        self.atenderPaciente()
+                    elif opcoesmenu == '4':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.prontuarioCompletoPacienteAtual(id_paciente)
+                    elif opcoesmenu == '5':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.primeraAnotacaoPacienteAtual(id_paciente)
+                    elif opcoesmenu == '6':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.ultimaAnotacaoPacienteAtual(id_paciente)
+                    elif opcoesmenu == '7':
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        anotacao = input('Digite a anotação da consulta: ')
+                        self.adicionarAnotacaoPacienteAtual(id_paciente, anotacao)
+                    else:
+                        print('Opção inválida, tente novamente')
 
 
 
 
-escolha_menu = input('''SELECIONE O MENU:
-1 - Recepção
-2 - Dentista
-''')
-
-if escolha_menu == '1':
-    menu_recepcao = input('''1 - Criar nova sessão
-    2 - Listar sessões
-    3 - Buscar sessão
-    4 - Adicionar novo paciente
-    5 - Marcar consulta para paciente
-    6 - Listar consultas marcadas para um paciente
-    7 - iniciar sessão
-    8 - Confirmar se paciente está marcado para sessão atual
-    9 - Colocar paciente na fila de atendimento
-    10 - Listar próximo paciente da fila de atendimento
-    11 - Listar próximo paciente da fila de atendimento
-    12 - Listar consultas realizadas numa sessão
-    ''')
-
-elif escolha_menu == '2':
-    menu_dentista = input('''1 - Iniciar sessão
-    2 - Atender próximo paciente 
-    3 - Ler prontuário do paciente atual
-    4 - Ler primeira anotação do paciente atual
-    5 - Ler anotação mais recente do paciente atual
-    6 - Anotar prontuário do paciente atual
-    ''')
+if __name__ == '__main__':
+    DenteClean = Recepcao()
+    DenteClean.run()
