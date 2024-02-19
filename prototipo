@@ -18,7 +18,7 @@ class Sessao:
         self.data = data
         self.horario_inicio = horario_inicio
         self.horario_fim = horario_fim
-        self.fila_sessao - []
+        self.fila_sessao = []
         self.sessao_dentista = None
         self.anotacoes = []
 
@@ -84,7 +84,8 @@ class Recepcao:
         if validacao_sessao:
             self.sessao_atual = validacao_sessao
             self.sessao_atual.fila_sessao = []
-            print(f'Sessão {sessao.data} das {sessao.horario_inicio} às {sessao.horario_fim} iniciada.')
+            self.sessao_atual.sessao_dentista
+            print(f'Sessão {self.sessao_atual.data} das {self.sessao_atual.horario_inicio} às {self.sessao_atual.horario_fim} iniciada.')
         else:
             print('Sessão não existe')
 
@@ -102,34 +103,45 @@ class Recepcao:
                 consulta = Consulta(paciente, sessao)
                 sessao.fila_sessao.append(consulta)
                 print(f'Marcado horário para {paciente.nome} na sessão {sessao.data}.')
-            else:
-                print('Não há sessão nesta data.')
-        else:
-            print('Paciente não encontrado.')
 
     def listarConsultas(self, id_paciente):
         paciente = self.buscarPaciente(id_paciente)
         if paciente:
             print(f"Horários marcados para {paciente.nome}:")
+            consultas_marcadas = False
             for sessao in self.sessoes:
-                for consulta in sessao.consultas: #ainda criar lista consultas
+                for consulta in sessao.fila_sessao:
                     if consulta.paciente == paciente:
                         print(f'Sessão {sessao.data} das {sessao.horario_inicio} as {sessao.horario_fim}')
+                        consultas_marcadas = True
+            if not consultas_marcadas:
+                print('Nã há consulta marcada para este paciente')
+        else:
+            print('Paciente não encontrado')
 
     def confirmarConsulta(self, id_paciente):
         paciente = self.buscarPaciente(id_paciente)
         if paciente and self.sessao_atual:
             for consulta in self.sessao_atual.fila_sessao:
                 if consulta.paciente == paciente:
-                    self.sessao_atual.fila_sessao.append(paciente)
-                    print(f'{paciente.nome} tem consulta marcada para a sessão atual e está adicionado à fila')
+                    print(f'{paciente.nome} tem consulta marcada para a sessão atual')
                     return True
             print(f'{paciente.nome} não tem consulta marcada para a sessão atual')
             return False
 
+    def adicionarPacienteAFila(self, id_paciente):
+        paciente = self.buscarPaciente(id_paciente)
+        if paciente and self.sessao_atual:
+            consulta = Consulta(paciente, self.sessao_atual)
+            self.sessao_atual.fila_sessao.append(paciente)
+            print(f'{paciente.nome} adicionado a fila')
+        else:
+            print('Paciente não encontrado ou sessão não iniciada')
+
     def listarProximoDaFila(self):
         if self.sessao_atual and self.sessao_atual.fila_sessao:
-            proximo_paciente = self.sessao_atual.fila_sessao[0]
+            proximo_consulta = self.sessao_atual.fila_sessao[0]
+            proximo_paciente = proximo_consulta.paciente
             print(f'O proxímo paciente da fila é {proximo_paciente.nome}')
         else:
             print('Fila vazia ou sessão não iniciada.')
@@ -242,9 +254,10 @@ class Recepcao:
         5 - Marcar consulta para paciente
         6 - Listar consultas marcadas para um paciente
         7 - iniciar sessão
-        8 - Confirmar se paciente está marcado para sessão atual e adiciona-lo na fila
-        9 - Listar próximo paciente da fila de atendimento
-        10 - Listar consultas realizadas numa sessão
+        8 - Confirmar se paciente está marcado para sessão atual
+        9 - Adicionar paciente à fila
+        10 - Listar próximo paciente da fila de atendimento
+        11 - Listar consultas realizadas numa sessão
         0 - Voltar
         ''')
 
@@ -311,9 +324,12 @@ class Recepcao:
                         id_paciente = int(input('Digite o ID do paciente: '))
                         self.confirmarConsulta(id_paciente)
                     elif opcoesmenu == '9':
-                        self.listarProximoDaFila()
+                        id_paciente = int(input('Digite o ID do paciente: '))
+                        self.adicionarPacienteAFila(id_paciente)
                     elif opcoesmenu == '10':
-                        self.listarConsultasFeitasDaSessao
+                        self.listarProximoDaFila()
+                    elif opcoesmenu == '11':
+                        self.listarConsultasFeitasDaSessao()
                     else:
                         print('Opção inválida, tente novamente')
                 elif self.menu_selecionado == self.menuDentista:
