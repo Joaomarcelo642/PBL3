@@ -83,8 +83,7 @@ class Recepcao:
         validacao_sessao = self.buscarSessao(data)
         if validacao_sessao:
             self.sessao_atual = validacao_sessao
-            self.sessao_atual.fila_sessao = []
-            self.sessao_atual.sessao_dentista
+            self.sessao_atual.sessao_dentista = Dentista(self.sessao_atual.data, self.sessao_atual.horario_inicio)
             print(f'Sessão {self.sessao_atual.data} das {self.sessao_atual.horario_inicio} às {self.sessao_atual.horario_fim} iniciada.')
         else:
             print('Sessão não existe')
@@ -155,17 +154,16 @@ class Recepcao:
     def atenderPaciente(self):
         if self.sessao_atual and self.sessao_atual.sessao_dentista:
             if self.sessao_atual.fila_sessao:
-                proximo_paciente = self.sessao_atual.fila_sessao.pop(0)
-                consulta = Consulta(proximo_paciente, self.sessao_atual)
-                self.sessao_atual.sessao_dentista.consultas.append(consulta)
-                print(f'Próximo paciente: {proximo_paciente.nome}')
+                proximo_consulta = self.sessao_atual.fila_sessao.pop(0)
+                self.paciente_atual = proximo_consulta.paciente
+                print(f'Próximo paciente: {self.paciente_atual.nome}')
             else:
                 print('Fila da sessão vazia.')
         else:
             print('Sessão do dentista não iniciada ou fila da sessão indisponível.')
 
     def prontuarioCompletoPacienteAtual(self, id_paciente):
-        paciente = self.buscarPaciente(id_paciente)
+        paciente = self.paciente_atual
         if paciente and self.sessao_atual:
             print(f'Prontuário completo de {paciente.nome}, idade: {paciente.idade} na sessão {self.sessao_atual.data}')
             for consulta in self.sessao_atual.sessao_dentista.consultas:
@@ -175,10 +173,11 @@ class Recepcao:
                     for anotacao in consulta.sessao.anotacoes:
                         print(anotacao)
                     return
+        else:
             print('Paciente não atendido nesta sessão.')
 
     def primeraAnotacaoPacienteAtual(self, id_paciente):
-        paciente = self.buscarPaciente(id_paciente)
+        paciente = self.paciente_atual
         if paciente:
             for sessao in self.sessoes:
                 for consulta in sessao.sessao_dentista.consultas:
@@ -195,7 +194,7 @@ class Recepcao:
             print('Paciente não encontrado')
 
     def ultimaAnotacaoPacienteAtual(self, id_paciente):
-        paciente = self.buscarPaciente(id_paciente)
+        paciente = self.paciente_atual
         if paciente and self.sessao_atual:
             consulta_anterior = None
             for sessao in self.sessoes:
@@ -217,7 +216,7 @@ class Recepcao:
             print('Paciente não encontrado para sessão atual')
 
     def adicionarAnotacaoPacienteAtual(self, id_paciente, anotacao):
-        paciente = self.buscarPaciente(id_paciente)
+        paciente = self.paciente_atual
         if paciente and self.sessao_atual and self.sessao_atual.sessao_dentista:
             for consulta in self.sessao_atual.sessao_dentista.consultas:
                 if consulta.paciente == paciente:
@@ -235,6 +234,31 @@ class Recepcao:
                 print(consulta.paciente.nome)
         else:
             print('Sessão não iniciada')
+
+    def encerrarSessao(self):
+        if self.sessao_atual and self.sessao_atual.sessao_dentista:
+            sessao_atual = None
+            sessao_dentista = None
+            print('Sessão encerrada')
+        else:
+            print('Sessão não iniciada')
+
+    def inicializarSistema(self):
+        sessoes = [
+            ("20/02/2024", "09:00", "12:00"),
+            ("21/02/2024", "10:00", "13:00"),
+            ("22/02/2024", "11:00", "14:00")
+        ]
+        for data, inicio, fim in sessoes:
+            self.criarSessao(data, inicio, fim)
+
+        pacientes = [
+            ("João", 30),
+            ("Maria", 25),
+            ("Pedro", 40)
+        ]
+        for nome, idade in pacientes:
+            self.adicionarPaciente(nome, idade)
 
     def selecaoMenu(self):
         print('''
@@ -258,6 +282,7 @@ class Recepcao:
         9 - Adicionar paciente à fila
         10 - Listar próximo paciente da fila de atendimento
         11 - Listar consultas realizadas numa sessão
+        12 - Encerrar sessão
         0 - Voltar
         ''')
 
@@ -281,6 +306,7 @@ class Recepcao:
             
             if escolha_menu == '0':
                 print('Encerrando sistema')
+                break
             elif escolha_menu == '1':
                 self.menu_selecionado = self.menuRecepcao
             elif escolha_menu == '2':
@@ -330,6 +356,8 @@ class Recepcao:
                         self.listarProximoDaFila()
                     elif opcoesmenu == '11':
                         self.listarConsultasFeitasDaSessao()
+                    elif opcoesmenu == '12':
+                        self.encerrarSessao()
                     else:
                         print('Opção inválida, tente novamente')
                 elif self.menu_selecionado == self.menuDentista:
@@ -341,16 +369,12 @@ class Recepcao:
                     elif opcoesmenu == '3':
                         self.atenderPaciente()
                     elif opcoesmenu == '4':
-                        id_paciente = int(input('Digite o ID do paciente: '))
-                        self.prontuarioCompletoPacienteAtual(id_paciente)
+                        self.prontuarioCompletoPacienteAtual()
                     elif opcoesmenu == '5':
-                        id_paciente = int(input('Digite o ID do paciente: '))
-                        self.primeraAnotacaoPacienteAtual(id_paciente)
+                        self.primeraAnotacaoPacienteAtual()
                     elif opcoesmenu == '6':
-                        id_paciente = int(input('Digite o ID do paciente: '))
-                        self.ultimaAnotacaoPacienteAtual(id_paciente)
+                        self.ultimaAnotacaoPacienteAtual()
                     elif opcoesmenu == '7':
-                        id_paciente = int(input('Digite o ID do paciente: '))
                         anotacao = input('Digite a anotação da consulta: ')
                         self.adicionarAnotacaoPacienteAtual(id_paciente, anotacao)
                     else:
@@ -361,4 +385,7 @@ class Recepcao:
 
 if __name__ == '__main__':
     DenteClean = Recepcao()
+    DenteClean.inicializarSistema()
     DenteClean.run()
+
+#Corrigir item 4 do dentista
