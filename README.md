@@ -1,6 +1,5 @@
 # Sistema de Gestão para Clínica Odontológica
 
-![Logo](https://via.placeholder.com/150)
 
 ## Sumário
 
